@@ -55,15 +55,18 @@ std::unordered_map<std::string, std::vector<std::string>> buildDependencyGraph(c
     return graph;
 }
 
-
 void topologicalSortUtil(const std::string &v,
                          const std::unordered_map<std::string, std::vector<std::string>> &adj,
                          std::unordered_map<std::string, bool> &visited,
                          std::stack<std::string> &Stack)
 {
 
-    visited[v] = true;
+    if (adj.find(v) == adj.end())
+    {
+        return;
+    }
 
+    visited[v] = true;
 
     for (const auto &neighbor : adj.at(v))
     {
@@ -73,10 +76,8 @@ void topologicalSortUtil(const std::string &v,
         }
     }
 
-
     Stack.push(v);
 }
-
 
 std::vector<std::string> sortDependencies(const std::unordered_map<std::string, std::vector<std::string>> &adj)
 {
@@ -89,7 +90,6 @@ std::vector<std::string> sortDependencies(const std::unordered_map<std::string, 
         visited[pair.first] = false;
     }
 
-
     for (const auto &pair : adj)
     {
         if (!visited[pair.first])
@@ -98,7 +98,6 @@ std::vector<std::string> sortDependencies(const std::unordered_map<std::string, 
         }
     }
 
-
     std::vector<std::string> sortedOrder;
     while (!Stack.empty())
     {
@@ -106,7 +105,7 @@ std::vector<std::string> sortDependencies(const std::unordered_map<std::string, 
         Stack.pop();
     }
 
-    return sortedOrder; 
+    return sortedOrder;
 }
 
 void manualTest()
@@ -116,8 +115,7 @@ void manualTest()
     graph["A"] = {"B", "C"}; // A -> B & C
     graph["B"] = {"D"};      // B -> D
     graph["C"] = {"D"};      // C -> D
-    graph["D"] = {};         // D no deps
-
+    graph["D"] = {};         // D has no deps
 
     std::vector<std::string> sortedDependencies = sortDependencies(graph);
 
@@ -159,7 +157,7 @@ void fileTest(char *argv[])
 
         auto sortedDependencies = sortDependencies(fileDependencies);
 
-        std::cout << "\nSorted dependencies:" << std::endl;
+        std::cout << "Sorted dependencies:" << std::endl;
         for (const auto &dependency : sortedDependencies)
         {
             std::cout << " -> " << dependency << std::endl;
