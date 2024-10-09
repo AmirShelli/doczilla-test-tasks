@@ -35,6 +35,7 @@ std::vector<std::string> extractDependencies(const std::string filePath)
         {
             std::size_t startQuote = line.find('\'', requirePos);
             std::size_t endQuote = line.find('\'', startQuote + 1);
+
             std::string dependencyPath = line.substr(startQuote + 1, endQuote - startQuote - 1);
             dependencies.push_back(dependencyPath);
         }
