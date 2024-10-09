@@ -3,7 +3,8 @@
 #include <filesystem>
 #include <string>
 #include <vector>
-#include <regex>
+#include <unordered_map>
+#include <stack>
 
 namespace fs = std::filesystem;
 
@@ -22,62 +23,121 @@ std::vector<std::string> getTextFiles(const std::string &rootPath)
     return textFiles;
 }
 
-std::vector<std::string> extractDependencies(const std::string filePath)
+std::unordered_map<std::string, std::vector<std::string>> buildDependencyGraph(const std::vector<std::string> &textFiles)
 {
-    std::vector<std::string> dependencies;
-    std::ifstream file(filePath);
-    std::string line;
-
-    while (std::getline(file, line))
-    {
-        std::size_t requirePos = line.find("require");
-        if (requirePos != std::string::npos)
-        {
-            std::size_t startQuote = line.find('\'', requirePos);
-            std::size_t endQuote = line.find('\'', startQuote + 1);
-
-            std::string dependencyPath = line.substr(startQuote + 1, endQuote - startQuote - 1);
-            dependencies.push_back(dependencyPath);
-        }
-    }
-
-    return dependencies;
-}
-
-std::vector<std::pair<std::string, std::vector<std::string>>> parseTextFiles(const std::vector<std::string> &textFiles)
-{
-    std::vector<std::pair<std::string, std::vector<std::string>>> fileDependencies;
+    std::unordered_map<std::string, std::vector<std::string>> graph;
 
     for (const auto &filePath : textFiles)
     {
-        std::vector<std::string> dependencies = extractDependencies(filePath);
-        fileDependencies.push_back({filePath, dependencies});
+        std::vector<std::string> dependencies;
+        std::ifstream file(filePath);
+        std::string line;
+
+        while (std::getline(file, line))
+        {
+            std::size_t requirePos = line.find("require");
+            if (requirePos != std::string::npos)
+            {
+                std::size_t startQuote = line.find('\'', requirePos);
+                std::size_t endQuote = line.find('\'', startQuote + 1);
+
+                if (startQuote != std::string::npos && endQuote != std::string::npos)
+                {
+                    std::string dependencyPath = line.substr(startQuote + 1, endQuote - startQuote - 1);
+                    dependencies.push_back(dependencyPath);
+                }
+            }
+        }
+
+        graph[filePath] = dependencies;
     }
 
-    return fileDependencies;
+    return graph;
 }
 
-int main(int argc, char *argv[])
+
+void topologicalSortUtil(const std::string &v,
+                         const std::unordered_map<std::string, std::vector<std::string>> &adj,
+                         std::unordered_map<std::string, bool> &visited,
+                         std::stack<std::string> &Stack)
 {
-    if (argc < 2)
+
+    visited[v] = true;
+
+
+    for (const auto &neighbor : adj.at(v))
     {
-        std::cerr << "Please provide the root path as an argument." << std::endl;
-        return 1;
+        if (!visited[neighbor])
+        {
+            topologicalSortUtil(neighbor, adj, visited, Stack);
+        }
     }
 
+
+    Stack.push(v);
+}
+
+
+std::vector<std::string> sortDependencies(const std::unordered_map<std::string, std::vector<std::string>> &adj)
+{
+    std::stack<std::string> Stack;
+    std::unordered_map<std::string, bool> visited;
+
+    // Mark all the vertices as not visited
+    for (const auto &pair : adj)
+    {
+        visited[pair.first] = false;
+    }
+
+
+    for (const auto &pair : adj)
+    {
+        if (!visited[pair.first])
+        {
+            topologicalSortUtil(pair.first, adj, visited, Stack);
+        }
+    }
+
+
+    std::vector<std::string> sortedOrder;
+    while (!Stack.empty())
+    {
+        sortedOrder.push_back(Stack.top());
+        Stack.pop();
+    }
+
+    return sortedOrder; 
+}
+
+void manualTest()
+{
+    std::unordered_map<std::string, std::vector<std::string>> graph;
+
+    graph["A"] = {"B", "C"}; // A -> B & C
+    graph["B"] = {"D"};      // B -> D
+    graph["C"] = {"D"};      // C -> D
+    graph["D"] = {};         // D no deps
+
+
+    std::vector<std::string> sortedDependencies = sortDependencies(graph);
+
+    std::cout << "Topological Sort Order:\n";
+    for (const auto &file : sortedDependencies)
+    {
+        std::cout << file << " ";
+    }
+    std::cout << std::endl;
+}
+
+void fileTest(char *argv[])
+{
     std::string rootPath = argv[1];
 
     std::vector<std::string> textFiles = getTextFiles(rootPath);
 
     if (!textFiles.empty())
     {
-        std::cout << "Found text files:" << std::endl;
-        for (const auto &file : textFiles)
-        {
-            std::cout << file << std::endl;
-        }
-
-        auto fileDependencies = parseTextFiles(textFiles);
+        auto fileDependencies = buildDependencyGraph(textFiles);
 
         std::cout << "\nFile dependencies:" << std::endl;
         for (const auto &[file, dependencies] : fileDependencies)
@@ -96,11 +156,29 @@ int main(int argc, char *argv[])
             }
             std::cout << std::endl;
         }
+
+        auto sortedDependencies = sortDependencies(fileDependencies);
+
+        std::cout << "\nSorted dependencies:" << std::endl;
+        for (const auto &dependency : sortedDependencies)
+        {
+            std::cout << " -> " << dependency << std::endl;
+        }
     }
     else
     {
         std::cout << "No text files found in the directory." << std::endl;
     }
+}
 
-    return 0;
+int main(int argc, char *argv[])
+{
+    if (argc == 2)
+    {
+        fileTest(argv);
+    }
+    else
+    {
+        manualTest();
+    }
 }
