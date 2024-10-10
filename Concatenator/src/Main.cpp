@@ -1,174 +1,70 @@
 #include <iostream>
-#include <fstream>
-#include <filesystem>
-#include <string>
-#include <vector>
-#include <map>
-#include <algorithm>
+#include "../inc/DependencyHandler.h"
+#include "../inc/FileHandler.h"
 
-namespace fs = std::filesystem;
-
-std::vector<std::string> getTextFiles(const std::string &rootPath)
-{
-    std::vector<std::string> textFiles;
-
-    for (const auto &entry : fs::recursive_directory_iterator(rootPath))
-    {
-        if (entry.is_regular_file())
-        {
-            auto relativePath = fs::relative(entry.path(), rootPath).string();
-            textFiles.push_back(relativePath);
-        }
-    }
-
-    return textFiles;
-}
-
-std::map<std::string, std::vector<std::string>> buildDependencyGraph(const std::vector<std::string> &textFiles, const std::string &rootPath)
+void manualTest(DependencyHandler &dependencyHandler)
 {
     std::map<std::string, std::vector<std::string>> graph;
-
-    for (const auto &filePath : textFiles)
-    {
-        std::vector<std::string> dependencies;
-        std::ifstream file(fs::path(rootPath) / filePath);
-        std::string line;
-
-        while (std::getline(file, line))
-        {
-            std::size_t requirePos = line.find("require");
-            if (requirePos != std::string::npos)
-            {
-                std::size_t startQuote = line.find('\'', requirePos);
-                std::size_t endQuote = line.find('\'', startQuote + 1);
-
-                if (startQuote != std::string::npos && endQuote != std::string::npos)
-                {
-                    std::string dependencyPath = line.substr(startQuote + 1, endQuote - startQuote - 1);
-                    dependencies.push_back(dependencyPath);
-                }
-            }
-        }
-
-        graph[filePath] = dependencies;
-    }
-
-    return graph;
-}
-
-void topologicalSortUtil(const std::string &v,
-                         const std::map<std::string, std::vector<std::string>> &adj,
-                         std::map<std::string, bool> &visited,
-                         std::vector<std::string> &rec_stack)
-{
-    visited[v] = true;
-
-    if (adj.find(v) != adj.end())
-    {
-        std::vector<std::string> neighbors = adj.at(v);
-        // std::sort(neighbors.begin(), neighbors.end()); if needs to be sorted by name
-
-        for (const auto &neighbor : neighbors)
-        {
-            if (!visited[neighbor])
-            {
-                topologicalSortUtil(neighbor, adj, visited, rec_stack);
-            }
-        }
-    }
-
-    rec_stack.push_back(v);
-}
-
-std::vector<std::string> sortDependencies(const std::map<std::string, std::vector<std::string>> &adj)
-{
-    std::vector<std::string> deps;
-    std::map<std::string, bool> visited;
-
-    for (const auto &pair : adj)
-    {
-        visited[pair.first] = false;
-        for (const auto &neighbor : pair.second)
-        {
-            if (visited.find(neighbor) == visited.end())
-            {
-                visited[neighbor] = false;
-            }
-        }
-    }
-
-    for (const auto &pair : adj)
-    {
-        if (!visited[pair.first])
-        {
-            topologicalSortUtil(pair.first, adj, visited, deps);
-        }
-    }
-
-    for (const auto &pair : visited)
-    {
-        if (!pair.second)
-        {
-            topologicalSortUtil(pair.first, adj, visited, deps);
-        }
-    }
-
-    return deps;
-}
-
-void manualTest()
-{
-    std::map<std::string, std::vector<std::string>> graph;
+    std::vector<std::string> sortedGraph;
+    std::vector<std::string> cyclePath;
 
     graph["A"] = {"B", "C"}; // A -> B & C
     graph["B"] = {"D"};      // B -> D
     graph["C"] = {"D"};      // C -> D
     graph["D"] = {};         // D has no deps
 
-    std::vector<std::string> sortedDependencies = sortDependencies(graph);
-
-    std::cout << "Topological Sort Order:\n";
-    for (const auto &file : sortedDependencies)
+    if (dependencyHandler.sortDependencies(graph, sortedGraph, cyclePath))
     {
-        std::cout << file << " ";
+        std::cout << "Topological Sort Order:\n";
+        for (const auto &file : sortedGraph)
+        {
+            std::cout << file << " ";
+        }
+        std::cout << std::endl;
     }
-    std::cout << std::endl;
+    else
+    {
+        std::cout << "Cannot perform concatenation due to cyclic dependencies." << std::endl;
+        std::cout << "Cycle detected: ";
+        for (auto it = cyclePath.rbegin(); it != cyclePath.rend(); ++it)
+        {
+            std::cout << *it << " -> ";
+        }
+        std::cout << cyclePath.back() << std::endl;
+    }
 }
 
-void fileTest(char *argv[])
+void fileTest(FileHandler &fileHandler, DependencyHandler &dependencyHandler)
 {
-    std::string rootPath = argv[1];
 
-    std::vector<std::string> textFiles = getTextFiles(rootPath);
+std::vector<std::string> textFiles = fileHandler.getTextFiles();
 
-    if (!textFiles.empty())
+    if (!fileHandler.getTextFiles().empty())
     {
-        auto fileDependencies = buildDependencyGraph(textFiles, rootPath);
+        auto fileDependencies = fileHandler.buildDependencyGraph();
 
-        std::cout << "\nFile dependencies:" << std::endl;
-        for (const auto &[file, dependencies] : fileDependencies)
+        std::vector<std::string> sortedDependencies;
+        std::vector<std::string> cyclePath;
+
+        if (textFiles.empty())
         {
-            std::cout << "File: " << file << " depends on: ";
-            if (dependencies.empty())
+            std::cout << "Sorted dependencies:" << std::endl;
+            for (const auto &dependency : sortedDependencies)
             {
-                std::cout << "No dependencies";
+                std::cout << " -> " << dependency << std::endl;
             }
-            else
-            {
-                for (const auto &dep : dependencies)
-                {
-                    std::cout << dep << " ";
-                }
-            }
-            std::cout << std::endl;
+
+            // TODO concat
         }
-
-        auto sortedDependencies = sortDependencies(fileDependencies);
-
-        std::cout << "Sorted dependencies:" << std::endl;
-        for (const auto &dependency : sortedDependencies)
+        else
         {
-            std::cout << " -> " << dependency << std::endl;
+            std::cout << "Cannot perform concatenation due to cyclic dependencies." << std::endl;
+            std::cout << "Cycle detected: ";
+            for (auto it = cyclePath.rbegin(); it != cyclePath.rend(); ++it)
+            {
+                std::cout << *it << " -> ";
+            }
+            std::cout << cyclePath.back() << std::endl;
         }
     }
     else
@@ -179,12 +75,16 @@ void fileTest(char *argv[])
 
 int main(int argc, char *argv[])
 {
+
+    DependencyHandler DependencyHandler;
+
     if (argc == 2)
     {
-        fileTest(argv);
+        FileHandler fileHandler(argv[1]);
+        fileTest(fileHandler, DependencyHandler);
     }
     else
     {
-        manualTest();
+        manualTest(DependencyHandler);
     }
 }
