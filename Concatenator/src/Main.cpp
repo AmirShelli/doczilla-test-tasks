@@ -46,7 +46,7 @@ std::vector<std::string> textFiles = fileHandler.getTextFiles();
         std::vector<std::string> sortedDependencies;
         std::vector<std::string> cyclePath;
 
-        if (textFiles.empty())
+        if (dependencyHandler.sortDependencies(fileDependencies, sortedDependencies, cyclePath))
         {
             std::cout << "Sorted dependencies:" << std::endl;
             for (const auto &dependency : sortedDependencies)
@@ -76,15 +76,15 @@ std::vector<std::string> textFiles = fileHandler.getTextFiles();
 int main(int argc, char *argv[])
 {
 
-    DependencyHandler DependencyHandler;
+    DependencyHandler dependencyHandler;
 
     if (argc == 2)
     {
         FileHandler fileHandler(argv[1]);
-        fileTest(fileHandler, DependencyHandler);
+        fileTest(fileHandler, dependencyHandler);
     }
     else
     {
-        manualTest(DependencyHandler);
+        manualTest(dependencyHandler);
     }
 }

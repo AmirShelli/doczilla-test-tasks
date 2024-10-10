@@ -1,7 +1,7 @@
 appname := concat
 
 CXX := clang++
-CXXFLAGS := -std=c++17 -Iinc
+CXXFLAGS := -std=c++20 -Iinc
 
 SRCDIR := src
 INCDIR := inc
@@ -24,3 +24,5 @@ clean:
 
 run: $(appname)
 	./$(appname) $(if $(arg),$(arg),$(TESTDIR))
+
+test: $(appname)
