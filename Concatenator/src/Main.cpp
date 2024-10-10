@@ -3,8 +3,8 @@
 #include <filesystem>
 #include <string>
 #include <vector>
-#include <unordered_map>
-#include <stack>
+#include <map>
+#include <algorithm>
 
 namespace fs = std::filesystem;
 
@@ -16,21 +16,22 @@ std::vector<std::string> getTextFiles(const std::string &rootPath)
     {
         if (entry.is_regular_file())
         {
-            textFiles.push_back(entry.path().string());
+            auto relativePath = fs::relative(entry.path(), rootPath).string();
+            textFiles.push_back(relativePath);
         }
     }
 
     return textFiles;
 }
 
-std::unordered_map<std::string, std::vector<std::string>> buildDependencyGraph(const std::vector<std::string> &textFiles)
+std::map<std::string, std::vector<std::string>> buildDependencyGraph(const std::vector<std::string> &textFiles, const std::string &rootPath)
 {
-    std::unordered_map<std::string, std::vector<std::string>> graph;
+    std::map<std::string, std::vector<std::string>> graph;
 
     for (const auto &filePath : textFiles)
     {
         std::vector<std::string> dependencies;
-        std::ifstream file(filePath);
+        std::ifstream file(fs::path(rootPath) / filePath);
         std::string line;
 
         while (std::getline(file, line))
@@ -56,61 +57,68 @@ std::unordered_map<std::string, std::vector<std::string>> buildDependencyGraph(c
 }
 
 void topologicalSortUtil(const std::string &v,
-                         const std::unordered_map<std::string, std::vector<std::string>> &adj,
-                         std::unordered_map<std::string, bool> &visited,
-                         std::stack<std::string> &Stack)
+                         const std::map<std::string, std::vector<std::string>> &adj,
+                         std::map<std::string, bool> &visited,
+                         std::vector<std::string> &rec_stack)
 {
-
-    if (adj.find(v) == adj.end())
-    {
-        return;
-    }
-
     visited[v] = true;
 
-    for (const auto &neighbor : adj.at(v))
+    if (adj.find(v) != adj.end())
     {
-        if (!visited[neighbor])
+        std::vector<std::string> neighbors = adj.at(v);
+        // std::sort(neighbors.begin(), neighbors.end()); if needs to be sorted by name
+
+        for (const auto &neighbor : neighbors)
         {
-            topologicalSortUtil(neighbor, adj, visited, Stack);
+            if (!visited[neighbor])
+            {
+                topologicalSortUtil(neighbor, adj, visited, rec_stack);
+            }
         }
     }
 
-    Stack.push(v);
+    rec_stack.push_back(v);
 }
 
-std::vector<std::string> sortDependencies(const std::unordered_map<std::string, std::vector<std::string>> &adj)
+std::vector<std::string> sortDependencies(const std::map<std::string, std::vector<std::string>> &adj)
 {
-    std::stack<std::string> Stack;
-    std::unordered_map<std::string, bool> visited;
+    std::vector<std::string> deps;
+    std::map<std::string, bool> visited;
 
-    // Mark all the vertices as not visited
     for (const auto &pair : adj)
     {
         visited[pair.first] = false;
+        for (const auto &neighbor : pair.second)
+        {
+            if (visited.find(neighbor) == visited.end())
+            {
+                visited[neighbor] = false;
+            }
+        }
     }
 
     for (const auto &pair : adj)
     {
         if (!visited[pair.first])
         {
-            topologicalSortUtil(pair.first, adj, visited, Stack);
+            topologicalSortUtil(pair.first, adj, visited, deps);
         }
     }
 
-    std::vector<std::string> sortedOrder;
-    while (!Stack.empty())
+    for (const auto &pair : visited)
     {
-        sortedOrder.push_back(Stack.top());
-        Stack.pop();
+        if (!pair.second)
+        {
+            topologicalSortUtil(pair.first, adj, visited, deps);
+        }
     }
 
-    return sortedOrder;
+    return deps;
 }
 
 void manualTest()
 {
-    std::unordered_map<std::string, std::vector<std::string>> graph;
+    std::map<std::string, std::vector<std::string>> graph;
 
     graph["A"] = {"B", "C"}; // A -> B & C
     graph["B"] = {"D"};      // B -> D
@@ -135,7 +143,7 @@ void fileTest(char *argv[])
 
     if (!textFiles.empty())
     {
-        auto fileDependencies = buildDependencyGraph(textFiles);
+        auto fileDependencies = buildDependencyGraph(textFiles, rootPath);
 
         std::cout << "\nFile dependencies:" << std::endl;
         for (const auto &[file, dependencies] : fileDependencies)
