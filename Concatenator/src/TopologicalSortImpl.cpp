@@ -1,23 +1,24 @@
-#include "../inc/DependencyHandler.h"
+#include "../inc/TopologicalSortImpl.h"
 
-DependencyHandler::DependencyHandler()
+TopologicalSortImpl::TopologicalSortImpl()
 {
 }
 
-DependencyHandler::~DependencyHandler()
+TopologicalSortImpl::~TopologicalSortImpl()
 {
 }
 
 
-bool DependencyHandler::topologicalSortUtil(const std::string &v,
-                         const std::map<std::string, std::vector<std::string>> &adj,
+bool TopologicalSortImpl::TopologicalSortUtil(const std::string &v,
                          std::map<std::string, bool> &visited,
-                         std::map<std::string, bool> &recStack,
-                         std::vector<std::string> &sortedOrder,
-                         std::vector<std::string> &cyclePath)
+                         std::map<std::string, bool> &recStack, sortArgs &args)
 {
     visited[v] = true;
     recStack[v] = true;
+
+    const std::map<std::string, std::vector<std::string>> &adj = args.adj;
+    std::vector<std::string> &sortedOrder = args.sortedOrder;
+    std::vector<std::string> &cyclePath = args.cyclePath;
 
     if (adj.find(v) != adj.end())
     {
@@ -25,7 +26,7 @@ bool DependencyHandler::topologicalSortUtil(const std::string &v,
         {
             if (!visited[neighbor])
             {
-                if (topologicalSortUtil(neighbor, adj, visited, recStack, sortedOrder, cyclePath))
+                if (TopologicalSortUtil(neighbor, visited, recStack, args))
                 {
                     cyclePath.push_back(v);
                     return true;
@@ -33,7 +34,6 @@ bool DependencyHandler::topologicalSortUtil(const std::string &v,
             }
             else if (recStack[neighbor])
             {
-                // Cycle detected
                 cyclePath.push_back(neighbor);
                 cyclePath.push_back(v);
                 return true;
@@ -46,12 +46,12 @@ bool DependencyHandler::topologicalSortUtil(const std::string &v,
     return false;
 }
 
-    bool DependencyHandler::sortDependencies(const std::map<std::string, std::vector<std::string>> &adj,
-                      std::vector<std::string> &sortedOrder,
-                      std::vector<std::string> &cyclePath)
+    bool TopologicalSortImpl::sortDependencies(sortArgs &args)
 {
     std::map<std::string, bool> visited;
     std::map<std::string, bool> recStack;
+
+    const std::map<std::string, std::vector<std::string>> &adj = args.adj;
 
     for (const auto &pair : adj)
     {
@@ -71,7 +71,7 @@ bool DependencyHandler::topologicalSortUtil(const std::string &v,
     {
         if (!visited[pair.first])
         {
-            if (topologicalSortUtil(pair.first, adj, visited, recStack, sortedOrder, cyclePath))
+            if (TopologicalSortUtil(pair.first, visited, recStack, args))
             {
                 return false;
             }

@@ -1,19 +1,21 @@
 #include <iostream>
-#include "../inc/DependencyHandler.h"
+#include "../inc/TopologicalSortImpl.h"
 #include "../inc/FileHandler.h"
 
-void manualTest(DependencyHandler &dependencyHandler)
+void mock(ISort &sortingAlgorithm)
 {
     std::map<std::string, std::vector<std::string>> graph;
     std::vector<std::string> sortedGraph;
     std::vector<std::string> cyclePath;
+
+    sortArgs args = {graph, sortedGraph, cyclePath};
 
     graph["A"] = {"B", "C"}; // A -> B & C
     graph["B"] = {"D"};      // B -> D
     graph["C"] = {"D"};      // C -> D
     graph["D"] = {};         // D has no deps
 
-    if (dependencyHandler.sortDependencies(graph, sortedGraph, cyclePath))
+    if (sortingAlgorithm.sortDependencies(args))
     {
         std::cout << "Topological Sort Order:\n";
         for (const auto &file : sortedGraph)
@@ -34,7 +36,7 @@ void manualTest(DependencyHandler &dependencyHandler)
     }
 }
 
-void fileTest(FileHandler &fileHandler, DependencyHandler &dependencyHandler)
+void run(FileHandler &fileHandler, ISort &sortingAlgorithm)
 {
 
 std::vector<std::string> textFiles = fileHandler.getTextFiles();
@@ -46,7 +48,9 @@ std::vector<std::string> textFiles = fileHandler.getTextFiles();
         std::vector<std::string> sortedFiles;
         std::vector<std::string> cyclePath;
 
-        if (dependencyHandler.sortDependencies(fileDependencies, sortedFiles, cyclePath))
+        sortArgs args = {fileDependencies, sortedFiles, cyclePath};
+
+        if (sortingAlgorithm.sortDependencies(args))
         {
             std::cout << "Sorted files:" << std::endl;
             for (const auto &filePath : sortedFiles)
@@ -73,17 +77,17 @@ std::vector<std::string> textFiles = fileHandler.getTextFiles();
 }
 
 int main(int argc, char *argv[])
-{
-
-    DependencyHandler dependencyHandler;
+{   
+    
+    TopologicalSortImpl topologicalSort;
 
     if (argc == 2)
     {
         FileHandler fileHandler(argv[1]);
-        fileTest(fileHandler, dependencyHandler);
+        run(fileHandler, topologicalSort);
     }
     else
     {
-        manualTest(dependencyHandler);
+        mock(topologicalSort);
     }
 }

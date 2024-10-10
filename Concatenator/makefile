@@ -1,4 +1,5 @@
 appname := concatenate
+resname := result.txt
 
 CXX := clang++
 CXXFLAGS := -std=c++20 -Iinc
@@ -20,7 +21,7 @@ $(appname): $(objects)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(appname) $(SRCDIR)/*.o
+	rm -f $(resname) $(appname) $(SRCDIR)/*.o 
 
 run: $(appname)
 	./$(appname) $(if $(arg),$(arg),$(TESTDIR))
