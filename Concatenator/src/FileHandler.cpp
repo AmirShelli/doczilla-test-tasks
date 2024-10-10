@@ -10,6 +10,24 @@ FileHandler::~FileHandler()
 {
 }
 
+void FileHandler::concatFiles(std::vector<std::string> sortedFiles)
+{
+    std::ofstream resultFile("result.txt");
+
+    for (const auto &filePath : sortedFiles)
+    {
+        std::ifstream file(fs::path(this->rootPath) / filePath);
+        std::string line;
+
+        while (std::getline(file, line))
+        {
+            resultFile << line << std::endl;
+        }
+    }
+
+    resultFile.close();
+}
+
 std::vector<std::string> FileHandler::getTextFiles()
 {
     return this->textFiles;

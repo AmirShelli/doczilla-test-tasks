@@ -43,18 +43,17 @@ std::vector<std::string> textFiles = fileHandler.getTextFiles();
     {
         auto fileDependencies = fileHandler.buildDependencyGraph();
 
-        std::vector<std::string> sortedDependencies;
+        std::vector<std::string> sortedFiles;
         std::vector<std::string> cyclePath;
 
-        if (dependencyHandler.sortDependencies(fileDependencies, sortedDependencies, cyclePath))
+        if (dependencyHandler.sortDependencies(fileDependencies, sortedFiles, cyclePath))
         {
-            std::cout << "Sorted dependencies:" << std::endl;
-            for (const auto &dependency : sortedDependencies)
+            std::cout << "Sorted files:" << std::endl;
+            for (const auto &filePath : sortedFiles)
             {
-                std::cout << " -> " << dependency << std::endl;
+                std::cout << " -> " << filePath << std::endl;
             }
-
-            // TODO concat
+            fileHandler.concatFiles(sortedFiles);
         }
         else
         {

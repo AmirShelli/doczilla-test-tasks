@@ -19,4 +19,5 @@ public:
 
     std::vector<std::string> getTextFiles();
     std::map<std::string, std::vector<std::string>> buildDependencyGraph();
+    void concatFiles(std::vector<std::string> sortedFiles);
 };
