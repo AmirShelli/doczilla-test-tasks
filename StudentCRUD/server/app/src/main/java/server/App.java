@@ -3,6 +3,9 @@
  */
 package server;
 
+import java.sql.Date;
+import java.util.List;
+
 public class App {
     public String getGreeting() {
         return "Hello World!";
@@ -10,5 +13,33 @@ public class App {
 
     public static void main(String[] args) {
         System.out.println(new App().getGreeting());
+
+
+        JDBCOps operations = new JDBCOps();
+
+        // Insert a new student
+        boolean isInserted = operations.insertStudent("first", "last", "middle", Date.valueOf("2000-01-01"), "A");
+        if (isInserted) {
+            List<String[]> students = operations.getAllStudents();
+            System.out.println("List of all students:");
+            for (String[] student : students) {
+                System.out.println("ID: " + student[0] + ", First Name: " + student[1] + ", Last Name: " + student[2] +
+                                ", Middle Name: " + student[3] + ", Birth Date: " + student[4] + ", Group: " + student[5]);
+            }
+        } else {
+            System.out.println("Failed to insert student.");
+        }
+
+        boolean isDeleted = operations.deleteStudent(1);
+        if (isDeleted) {
+            List<String[]> students = operations.getAllStudents();
+            System.out.println("List of all students:");
+            for (String[] student : students) {
+                System.out.println("ID: " + student[0] + ", First Name: " + student[1] + ", Last Name: " + student[2] +
+                                ", Middle Name: " + student[3] + ", Birth Date: " + student[4] + ", Group: " + student[5]);
+            }
+        } else {
+            System.out.println("Failed to delete student.");
+        }
     }
 }
