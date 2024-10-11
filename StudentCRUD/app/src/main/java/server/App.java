@@ -12,13 +12,13 @@ public class App {
     public static void testJDBC() {
         StudentDAO operations = new StudentDAO();
 
-        boolean isInserted = operations.insertStudent("first", "last", "middle", Date.valueOf("2000-01-01"), "A");
+        boolean isInserted = operations.createStudent(new Student(1, "first", "last", "middle", Date.valueOf("2000-01-01"), "A"));
         if (isInserted) {
-            List<String[]> students = operations.getAllStudents();
+            List<Student> students = operations.getAllStudents();
             System.out.println("List of all students:");
-            for (String[] student : students) {
-                System.out.println("ID: " + student[0] + ", First Name: " + student[1] + ", Last Name: " + student[2]
-                        + ", Middle Name: " + student[3] + ", Birth Date: " + student[4] + ", Group: " + student[5]);
+            for (Student student : students) {
+                System.out.println("ID: " + student.getId() + ", First Name: " + student.getFirstName() + ", Last Name: " + student.getLastName()
+                        + ", Middle Name: " + student.getMiddleName() + "Birth Date: " + student.getBirthDate() + ", Group: " + student.getStudentGroup());
             }
         } else {
             System.out.println("Failed to insert student.");
@@ -26,11 +26,11 @@ public class App {
 
         boolean isDeleted = operations.deleteStudent(1);
         if (isDeleted) {
-            List<String[]> students = operations.getAllStudents();
+            List<Student> students = operations.getAllStudents();
             System.out.println("List of all students:");
-            for (String[] student : students) {
-                System.out.println("ID: " + student[0] + ", First Name: " + student[1] + ", Last Name: " + student[2]
-                        + ", Middle Name: " + student[3] + ", Birth Date: " + student[4] + ", Group: " + student[5]);
+            for (Student student : students) {
+                System.out.println("ID: " + student.getId() + ", First Name: " + student.getFirstName() + ", Last Name: " + student.getLastName()
+                        + ", Middle Name: " + student.getMiddleName() + "Birth Date: " + student.getBirthDate() + ", Group: " + student.getStudentGroup());
             }
         } else {
             System.out.println("Failed to delete student.");

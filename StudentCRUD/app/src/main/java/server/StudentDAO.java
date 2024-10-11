@@ -31,7 +31,7 @@ public class StudentDAO {
     }
 
     public List<Student> getAllStudents() {
-        String sql = "SELECT * FROM students";
+        String sql = "SELECT * FROM student";
         List<Student> students = new ArrayList<>();
 
         try (Connection conn = JDBCUtils.getConnection();

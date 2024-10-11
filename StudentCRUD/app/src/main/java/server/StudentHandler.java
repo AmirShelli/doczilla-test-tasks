@@ -2,6 +2,7 @@ package server;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.List;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -12,33 +13,45 @@ public class StudentHandler implements HttpHandler {
     public void handle(HttpExchange exchange) throws IOException {
 
         String method = exchange.getRequestMethod();
+        String path = exchange.getRequestURI().getPath();
+        String params = path.substring("/api/students/".length());
 
-        if("GET".equalsIgnoreCase(method))
+        if ("GET".equalsIgnoreCase(method)) {
             getAllStudents(exchange);
-        if("POST".equalsIgnoreCase(method))
+        } else if ("POST".equalsIgnoreCase(method) && !params.isEmpty()) {
             createStudent(exchange);
-        if("DELETE".equalsIgnoreCase(method));
+        } else if ("DELETE".equalsIgnoreCase(method) && !params.isEmpty()) {
             deleteStudent(exchange);
-
-
-        String response = "Hello, this is a simple HTTP server response!";
-        exchange.sendResponseHeaders(200, response.length());
-        OutputStream os = exchange.getResponseBody();
-        os.write(response.getBytes());
-        os.close();
+        } else {
+            sendResponse(exchange, 405, "Method Not Allowed");
+        }
     }
 
     private void createStudent(HttpExchange exchange) {
 
     }
+
     private void deleteStudent(HttpExchange exchange) {
 
     }
-    private void getAllStudents(HttpExchange exchange) {
-        StudentDAO dao = new StudentDAO();
-        dao.getAllStudents();
 
-        
+    private void getAllStudents(HttpExchange exchange) throws IOException {
+        StudentDAO dao = new StudentDAO();
+        List<Student> students = dao.getAllStudents();
+
+        StringBuilder sb = new StringBuilder();
+
+        for (Student student : students) {
+            sb.append(student.toJson()).append("\n");
+        }
+
+        sendResponse(exchange, 200, sb.toString());
     }
 
+    private void sendResponse(HttpExchange exchange, int code, String response) throws IOException {
+        exchange.sendResponseHeaders(code, response.length());
+        OutputStream os = exchange.getResponseBody();
+        os.write(response.getBytes());
+        os.close();
+    }
 }
