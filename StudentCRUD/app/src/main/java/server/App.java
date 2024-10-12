@@ -12,7 +12,7 @@ public class App {
     public static void testJDBC() {
         StudentDAO operations = new StudentDAO();
 
-        boolean isInserted = operations.createStudent(new Student(1, "first", "last", "middle", Date.valueOf("2000-01-01"), "A"));
+        boolean isInserted = operations.createStudent(new Student("first", "last", "middle", Date.valueOf("2000-01-01"), "A"));
         if (isInserted) {
             List<Student> students = operations.getAllStudents();
             System.out.println("List of all students:");
@@ -39,13 +39,15 @@ public class App {
 
     public static void main(String[] args) {
         try {
-            HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
+            int port = 8080;
+
+            HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
             server.createContext("/api/students", new StudentHandler());
 
             server.setExecutor(null);
             server.start();
 
-            System.out.println("Server is running on port 8080");
+            System.out.println("Server is running on port " + port);
         } catch (IOException e) {
             e.printStackTrace();
         }

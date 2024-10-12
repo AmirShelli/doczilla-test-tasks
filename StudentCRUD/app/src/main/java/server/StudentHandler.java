@@ -1,8 +1,14 @@
 package server;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.sql.Date;
 import java.util.List;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -14,38 +20,80 @@ public class StudentHandler implements HttpHandler {
 
         String method = exchange.getRequestMethod();
         String path = exchange.getRequestURI().getPath();
-        String params = path.substring("/api/students/".length());
+        String params = path.substring("/api/students".length()).replaceAll("^/|/$", "");
 
-        if ("GET".equalsIgnoreCase(method)) {
-            getAllStudents(exchange);
-        } else if ("POST".equalsIgnoreCase(method) && !params.isEmpty()) {
-            createStudent(exchange);
-        } else if ("DELETE".equalsIgnoreCase(method) && !params.isEmpty()) {
-            deleteStudent(exchange);
-        } else {
-            sendResponse(exchange, 405, "Method Not Allowed");
+        try {
+            if ("GET".equalsIgnoreCase(method) && params.isBlank()) {
+                getAllStudents(exchange);
+            } else if ("POST".equalsIgnoreCase(method) && params.isBlank()) {
+                createStudent(exchange);
+            } else if ("DELETE".equalsIgnoreCase(method) && !params.isBlank()) {
+                deleteStudent(exchange, params);
+            } else {
+                sendResponse(exchange, 405, "Method Not Allowed");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            sendResponse(exchange, 500, "Some Server Error");
+        }
+
+    }
+
+    private void createStudent(HttpExchange exchange) throws IOException {
+        StudentDAO operations = new StudentDAO();
+
+        InputStream is = exchange.getRequestBody();
+        String requestBody = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+
+        JSONObject json = new JSONObject(requestBody);
+        String firstName = json.getString("firstName");
+        String lastName = json.getString("lastName");
+        String middleName = json.optString("middleName", "");
+        Date birthDate = Date.valueOf(json.getString("birthDate"));
+        String group = json.getString("studentGroup");
+
+        Student newStudent = new Student(firstName, lastName, middleName, birthDate, group);
+        boolean isCreated = operations.createStudent(newStudent);
+
+        String response = isCreated ? "Created successfully!" : "Oops!";
+        int code = isCreated ? 201 : 500;
+        sendResponse(exchange, code, response);
+    }
+
+    private void deleteStudent(HttpExchange exchange, String id) throws IOException {
+        StudentDAO operations = new StudentDAO();
+        try {
+            boolean isDeleted = operations.deleteStudent(Integer.parseInt(id));
+
+            String response = isDeleted ? "Deleted successfully!" : "Not found!";
+            int code = isDeleted ? 200 : 400;
+            sendResponse(exchange, code, response);
+        } catch (NumberFormatException e) {
+            sendResponse(exchange, 400, "Incorrect ID!");
         }
     }
 
-    private void createStudent(HttpExchange exchange) {
-
-    }
-
-    private void deleteStudent(HttpExchange exchange) {
-
-    }
-
+    // TODO fix id always equals 0
+    
     private void getAllStudents(HttpExchange exchange) throws IOException {
-        StudentDAO dao = new StudentDAO();
-        List<Student> students = dao.getAllStudents();
-
-        StringBuilder sb = new StringBuilder();
+        StudentDAO operations = new StudentDAO();
+        JSONArray jsonArray = new JSONArray();
+        List<Student> students = operations.getAllStudents();
 
         for (Student student : students) {
-            sb.append(student.toJson()).append("\n");
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("id", student.getId());
+            jsonObject.put("firstName", student.getFirstName());
+            jsonObject.put("lastName", student.getLastName());
+            jsonObject.put("middleName", student.getMiddleName());
+            jsonObject.put("birthDate", student.getBirthDate().toString());
+            jsonObject.put("studentGroup", student.getStudentGroup());
+            jsonArray.put(jsonObject);
         }
 
-        sendResponse(exchange, 200, sb.toString());
+        String response = jsonArray.toString();
+        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+        sendResponse(exchange, 200, response);
     }
 
     private void sendResponse(HttpExchange exchange, int code, String response) throws IOException {

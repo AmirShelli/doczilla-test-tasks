@@ -10,8 +10,15 @@ public class Student {
     private Date birthDate;
     private String studentGroup;
 
+    public Student(String firstName, String lastName, String middleName, Date birthDate, String studentGroup) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.middleName = middleName;
+        this.birthDate = birthDate;
+        this.studentGroup = studentGroup;
+    }
+
     public Student(int id, String firstName, String lastName, String middleName, Date birthDate, String studentGroup) {
-        this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.middleName = middleName;
