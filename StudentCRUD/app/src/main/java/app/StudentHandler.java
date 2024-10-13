@@ -22,7 +22,13 @@ public class StudentHandler implements HttpHandler {
         String path = exchange.getRequestURI().getPath();
         String params = path.substring("/api/students".length()).replaceAll("^/|/$", "");
 
+
         try {
+            if ("OPTIONS".equalsIgnoreCase(method)) {
+                handleOptionsRequest(exchange);
+                return;
+            }
+
             if ("GET".equalsIgnoreCase(method) && params.isBlank()) {
                 getAllStudents(exchange);
             } else if ("POST".equalsIgnoreCase(method) && params.isBlank()) {
@@ -32,7 +38,7 @@ public class StudentHandler implements HttpHandler {
             } else {
                 sendResponse(exchange, 405, "Method Not Allowed");
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
             sendResponse(exchange, 500, "Some Server Error");
         }
@@ -74,7 +80,6 @@ public class StudentHandler implements HttpHandler {
     }
 
     // TODO fix id always equals 0
-    
     private void getAllStudents(HttpExchange exchange) throws IOException {
         StudentDAO operations = new StudentDAO();
         JSONArray jsonArray = new JSONArray();
@@ -96,10 +101,23 @@ public class StudentHandler implements HttpHandler {
         sendResponse(exchange, 200, response);
     }
 
+    private void handleOptionsRequest(HttpExchange exchange) throws IOException {
+        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "http://127.0.0.1:4500");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
+        exchange.sendResponseHeaders(204, -1); // 204 No Content
+    }
+
     private void sendResponse(HttpExchange exchange, int code, String response) throws IOException {
+
+        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "https://127.0.0.1:4500");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
+    
+
         exchange.sendResponseHeaders(code, response.length());
-        OutputStream os = exchange.getResponseBody();
-        os.write(response.getBytes());
-        os.close();
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(response.getBytes());
+        }
     }
 }
