@@ -1,78 +1,74 @@
+const API_URL = "http://localhost:8080/api/students";
+
 document.addEventListener("DOMContentLoaded", () => {
     getAllStudents();
   
-
-    const addForm = document.getElementById("addStudentForm");
+    const addForm = document.getElementById("insertStudentForm");
     addForm.addEventListener("submit", createStudent);
   
-
     const deleteForm = document.getElementById("deleteStudentForm");
     deleteForm.addEventListener("submit", deleteStudentById);
   });
 
-function getAllStudents() {
+async function getAllStudents() {
   const table = document
     .getElementById("studentsTable")
     .getElementsByTagName("tbody")[0];
     table.innerHTML = "";
 
-  fetch("http://localhost:8080/api/students")
-    .then((response) => response.json())
-    .then((data) => {
-      data.forEach((student) => {
-        const row = table.insertRow();
-        const cellId = row.insertCell(0);
-        const cellFirstName = row.insertCell(1);
-        const cellLastName = row.insertCell(2);
-        const cellMiddleName = row.insertCell(3);
-        const cellBirthDate = row.insertCell(4);
-        const cellGroup = row.insertCell(5);
-
-        cellId.appendChild(document.createTextNode(student.id));
-        cellFirstName.appendChild(document.createTextNode(student.firstName));
-        cellLastName.appendChild(document.createTextNode(student.lastName));
-        cellMiddleName.appendChild(document.createTextNode(student.middleName));
-        cellBirthDate.appendChild(document.createTextNode(student.birthDate));
-        cellGroup.appendChild(document.createTextNode(student.studentGroup));
-      });
-    })
-    .catch((error) => console.error("Error fetching students: ", error));
+    try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        data.forEach((student) => {
+          const row = table.insertRow();
+          row.insertCell(0).appendChild(document.createTextNode(student.id));
+          row.insertCell(1).appendChild(document.createTextNode(student.firstName));
+          row.insertCell(2).appendChild(document.createTextNode(student.lastName));
+          row.insertCell(3).appendChild(document.createTextNode(student.middleName));
+          row.insertCell(4).appendChild(document.createTextNode(student.birthDate));
+          row.insertCell(5).appendChild(document.createTextNode(student.studentGroup));
+        });
+      } catch (error) {
+        console.error("Error fetching students: ", error);
+      }
 }
 
-function createStudent() {
-  event.preventDefault();
-
-  const form = document.getElementById("addStudentForm");
-  const formData = new FormData(form);
-  const formDataObject = {};
-
-  for(let [name, value] of formData) {
-    formDataObject[name] = value;
-  }
-
-  fetch("http://localhost:8080/api/students", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(formDataObject),
-  })
-  .catch((error) => console.error("Error creating student: ", error));
-}
-
-function deleteStudentById(event) {
+async function createStudent(event) {
     event.preventDefault();
+    
+    const form = document.getElementById("insertStudentForm");
+    const formData = new FormData(form);
+    const formDataObject = Object.fromEntries(formData);
   
-    const studentId = document.getElementById("id").value;
-  
-    fetch(`http://localhost:8080/api/students/${studentId}`, {
-      method: "DELETE",
-    })
-      .then((response) => {
-        if (response.ok) {
-          console.log(`Student with ID ${studentId} deleted.`);
-          getAllStudents();
-        }
-      })
-      .catch((error) => console.error("Error deleting student: ", error));
+    try {
+      await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formDataObject),
+      });
+      if (response.ok) {
+        console.log(`Student created.`);
+        getAllStudents();
+      }
+    } catch (error) {
+      console.error("Error creating student: ", error);
+    }
   }
+
+async function deleteStudentById(event) {
+  event.preventDefault();
+  
+  const studentId = document.getElementById("id").value;
+
+  try {
+    const response = await fetch(API_URL + `/${studentId}`, {
+      method: "DELETE",
+    });
+    if (response.ok) {
+      console.log(`Student with ID ${studentId} deleted.`);
+      getAllStudents();
+    }
+  } catch (error) {
+    console.error("Error deleting student: ", error);
+  }
+}
