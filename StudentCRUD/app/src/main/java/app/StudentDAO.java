@@ -11,9 +11,10 @@ public class StudentDAO {
 
     public boolean createStudent(Student student) {
         String sql = "INSERT INTO student (first_name, last_name, middle_name, birth_date, student_group) VALUES (?, ?, ?, ?, ?)";
+        String sql1 = "SELECT * FROM student";
 
-        try (Connection conn = JDBCUtils.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+        try (Connection conn = JDBCUtils.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql); PreparedStatement test = conn.prepareStatement(sql1);) {
 
             pstmt.setString(1, student.getFirstName());
             pstmt.setString(2, student.getLastName());
@@ -34,9 +35,8 @@ public class StudentDAO {
         String sql = "SELECT * FROM student";
         List<Student> students = new ArrayList<>();
 
-        try (Connection conn = JDBCUtils.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                ResultSet resultSet = pstmt.executeQuery();
+        try (Connection conn = JDBCUtils.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            ResultSet resultSet = pstmt.executeQuery();
 
             while (resultSet.next()) {
                 students.add(new Student(
@@ -57,8 +57,7 @@ public class StudentDAO {
     public boolean deleteStudent(int id) {
         String sql = "DELETE FROM student WHERE id = ?";
 
-        try (Connection conn = JDBCUtils.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = JDBCUtils.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, id);
             return pstmt.executeUpdate() > 0;

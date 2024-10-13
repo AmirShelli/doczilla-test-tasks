@@ -3,7 +3,7 @@ package app;
 import java.sql.Date;
 
 public class Student {
-    private int id;
+    private Integer id;
     private String firstName;
     private String lastName;
     private String middleName;
@@ -18,7 +18,8 @@ public class Student {
         this.studentGroup = studentGroup;
     }
 
-    public Student(int id, String firstName, String lastName, String middleName, Date birthDate, String studentGroup) {
+    public Student(Integer id, String firstName, String lastName, String middleName, Date birthDate, String studentGroup) {
+        this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.middleName = middleName;
@@ -26,11 +27,11 @@ public class Student {
         this.studentGroup = studentGroup;
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
