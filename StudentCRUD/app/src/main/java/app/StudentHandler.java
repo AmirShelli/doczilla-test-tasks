@@ -110,7 +110,7 @@ public class StudentHandler implements HttpHandler {
 
     private void sendResponse(HttpExchange exchange, int code, String response) throws IOException {
 
-        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "https://127.0.0.1:4500");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "http://127.0.0.1:4500");
         exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
         exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
     
