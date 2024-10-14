@@ -15,6 +15,8 @@ import com.sun.net.httpserver.HttpHandler;
 
 public class StudentHandler implements HttpHandler {
 
+    private final String CORS_URI = "http://localhost";
+
     @Override
     public void handle(HttpExchange exchange) throws IOException {
 
@@ -79,7 +81,6 @@ public class StudentHandler implements HttpHandler {
         }
     }
 
-    // TODO fix id always equals 0
     private void getAllStudents(HttpExchange exchange) throws IOException {
         StudentDAO operations = new StudentDAO();
         JSONArray jsonArray = new JSONArray();
@@ -98,26 +99,24 @@ public class StudentHandler implements HttpHandler {
 
         String response = jsonArray.toString();
         exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
-        sendResponse(exchange, 200, response);
-    }
+        sendResponse(exchange, 200, response);    }
 
     private void handleOptionsRequest(HttpExchange exchange) throws IOException {
-        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "http://127.0.0.1:4500");
-        exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
-        exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
-        exchange.sendResponseHeaders(204, -1); // 204 No Content
+        addCORSHeaders(exchange);
+        exchange.sendResponseHeaders(204, -1);
     }
 
     private void sendResponse(HttpExchange exchange, int code, String response) throws IOException {
-
-        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "http://127.0.0.1:4500");
-        exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
-        exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
-    
-
+        addCORSHeaders(exchange);
         exchange.sendResponseHeaders(code, response.length());
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(response.getBytes());
         }
+    }
+
+    private void addCORSHeaders(HttpExchange exchange) throws IOException {
+        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", CORS_URI);
+        exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
     }
 }
