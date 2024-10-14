@@ -1,9 +1,16 @@
 # doczilla-test-tasks
 
-To run the program enter the main directory
-and execute the following line:
+# TASK 1
 
-```
+## Overview
+
+Task 1 concatenates file contents based on their dependency tree. The solution uses topological sort to sort the dependency graph and reveal if it's a CAG. To run the program enter the main directory
+
+## Setup
+
+## Build and Run with Makefile
+
+```bash
 make run arg=<folderName>
 ```
 
@@ -11,7 +18,7 @@ make run arg=<folderName>
 
 ## Overview
 
-StudentCRUD is a simple application that allows managing student records. It consists of a Java-based backend server, a PostgreSQL database, and a frontend served via NGINX written in Vanilla JavaScript.
+Task 2 contains a simple application that allows managing student records. It consists of a Java-based backend server, a PostgreSQL database, and a client written in Vanilla JavaScript served via NGINX.
 
 ## Prerequisites
 
@@ -33,7 +40,9 @@ cd StudentCRUD
 ```bash
 docker-compose up --build
 ```
-
-* Access the Frontend: http://localhost
-* Access the Backend API: http://localhost:8080/api/students
+* Web page is available at: http://localhost
+* API: 
+    - GET http://localhost:8080/api/students
+    - POST http://localhost:8080/api/students
+    - DELETE http://localhost:8080/api/students/{id}
 * PostgreSQL: Accessible on localhost:5432
