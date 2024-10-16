@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Todo List</title>
+    <link rel="stylesheet" href="index.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://kit.fontawesome.com/b99e675b6e.js"></script>
+</head>
+
+<body>
+
+    <div class="header">
+        <div class="search-bar">
+            <input type="text" id="search-task" placeholder="Search...">
+        </div>
+        <div class="profile-icon"></div>
+    </div>
+
+    <div class="todo-container">
+
+        <div class="sidebar">
+            <button id="today-btn">Today</button>
+            <button id="week-btn">Week</button>
+
+            <p>Date: <input type="text" id="datepicker"></p>
+
+            <div class="checkbox">
+                <input type="checkbox" id="show-uncompleted">
+                <label for="show-uncompleted">Uncomplete</label>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="info">
+
+                <p>date</p>
+
+                <select text="sort-by" id="sort-by">
+                    <option value="asc">Ascending</option>
+                    <option value="desc">Descending</option>
+                </select>
+                
+            </div>
+
+            <h1>Todo List</h1>
+            <div id="tasks">
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        $(function () {
+            $("#datepicker").datepicker();
+        });
+
+        $(document).ready(function () {
+            function fetchTasks() {
+                $.ajax({
+                    url: 'http://localhost:3000/api/todos',
+                    method: 'GET',
+                    success: function (data) {
+                        displayTasks(data);
+                    },
+                    error: function (err) {
+                        console.error("Error fetching tasks:", err);
+                    }
+                });
+            }
+
+            function displayTasks(tasks) {
+                const container = $('#tasks');
+                container.empty();
+
+                const list = $('<ul></ul>');
+
+                tasks.forEach(function (task) {
+                    const listItem = $('<li></li>');
+                    listItem.append(`${task.name}<br>`);
+                    list.append(listItem);
+                });
+
+                container.append(list);
+            }
+
+            fetchTasks();
+        });
+    </script>
+</body>
+
+</html>
