@@ -41,7 +41,7 @@
                     <option value="asc">Ascending</option>
                     <option value="desc">Descending</option>
                 </select>
-                
+
             </div>
 
             <h1>Todo List</h1>
@@ -52,17 +52,23 @@
 
 
     <script>
-        $(function () {
-            $("#datepicker").datepicker();
-        });
+        // $(function () {
+        //     $("#datepicker").datepicker();
+        // });
 
         $(document).ready(function () {
+            let allTasks = [];
+            let tasks = [];
+
             function fetchTasks() {
                 $.ajax({
                     url: 'http://localhost:3000/api/todos',
                     method: 'GET',
                     success: function (data) {
-                        displayTasks(data);
+                        allTasks = data;
+                        tasks = [...allTasks];
+                        applyUncompletedFilter();
+                        displayTasks(tasks);
                     },
                     error: function (err) {
                         console.error("Error fetching tasks:", err);
@@ -70,23 +76,78 @@
                 });
             }
 
-            function displayTasks(tasks) {
+            function displayTasks(filteredTasks) {
                 const container = $('#tasks');
                 container.empty();
 
                 const list = $('<ul></ul>');
 
-                tasks.forEach(function (task) {
+                filteredTasks.forEach(function (task) {
                     const listItem = $('<li></li>');
-                    listItem.append(`${task.name}<br>`);
+                    listItem.append(`${task.name}<br>${task.shortDesc}<br>${task.date}<br>Status: ${task.status ? "Completed" : "Uncompleted"}`);
                     list.append(listItem);
                 });
 
                 container.append(list);
             }
 
+
             fetchTasks();
+
+
+            function applyUncompletedFilter() {
+                if ($('#show-uncompleted').is(':checked')) {
+                    tasks = allTasks.filter(task => !task.status);
+                } else {
+                    tasks = [...allTasks];
+                }
+            }
+
+            $('#search-task').on('input', function () {
+                const query = $(this).val().toLowerCase();
+                let filteredTasks = tasks.filter(task => task.name.toLowerCase().includes(query));
+                displayTasks(filteredTasks);
+            });
+
+
+            $('#today-btn').on('click', function () {
+                const today = new Date().toISOString().split('T')[0];
+                const todayTasks = tasks.filter(task => task.date.split('T')[0] === today);
+                displayTasks(todayTasks);
+            });
+
+            $('#week-btn').on('click', function () {
+                const today = new Date();
+                const firstDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
+                const lastDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + 6));
+
+                const weekTasks = tasks.filter(task => {
+                    const taskDate = new Date(task.date);
+                    return taskDate >= firstDayOfWeek && taskDate <= lastDayOfWeek;
+                });
+                displayTasks(weekTasks);
+            });
+
+            $('#sort-by').on('change', function () {
+                const sortOrder = $(this).val();
+                sortTasks(sortOrder);
+            });
+
+            function sortTasks(order) {
+                if (order === "asc") {
+                    tasks.sort((a, b) => new Date(a.date) - new Date(b.date));
+                } else if (order === "desc") {
+                    tasks.sort((a, b) => new Date(b.date) - new Date(a.date));
+                }
+                displayTasks(tasks);
+            }
+
+            $('#show-uncompleted').on('change', function () {
+                applyUncompletedFilter();
+                displayTasks(tasks);
+            });
         });
+
     </script>
 </body>
 
