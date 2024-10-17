@@ -83,28 +83,26 @@
             let dateRange = { start: null, end: null };
 
 
+            $("#date-range-picker").datepicker({
+                dateFormat: "yy-mm-dd",
+                onSelect: function (dateText) {
+                    const selectedDate = stripTime(new Date(dateText));
+
+                    if (!dateRange.start || dateRange.end) {
+                        setDateRange(selectedDate);
+                    } else if (!dateRange.end) {
+                        if (selectedDate >= dateRange.start) {
+                            setDateRange(dateRange.start, selectedDate);
+                        } else {
+                            setDateRange(selectedDate);
+                        }
+                    }
+                }
+            });
+
             function stripTime(date) {
                 return new Date(date.getFullYear(), date.getMonth(), date.getDate());
             }
-            $("#date-range-picker").datepicker({
-                dateFormat: "yy-mm-dd", // Corrected format
-                onSelect: function (dateText) {
-                    const selectedDate = new Date(dateText);
-                    if (!dateRange.start || dateRange.end) {
-                        dateRange.start = selectedDate;
-                        dateRange.end = null;
-                    } else if (!dateRange.end) {
-                        if (selectedDate >= dateRange.start) {
-                            dateRange.end = selectedDate;
-                        } else {
-                            dateRange.start = selectedDate;
-                            dateRange.end = null;
-                        }
-                    }
-                    $(this).datepicker("refresh");
-                    filterByDateRange();
-                }
-            });
 
             function filterByDateRange() {
                 if (dateRange.start && dateRange.end) {
@@ -116,7 +114,16 @@
                     });
 
                     displayTasks(filteredTasks);
-                } else {
+                } else if (dateRange.start && !dateRange.end) {
+                    const startDate = stripTime(dateRange.start);
+                    const filteredTasks = tasks.filter(task => {
+                        const taskDate = stripTime(new Date(task.date));
+                        return taskDate.getTime() === startDate.getTime(); // stripTime() resets to 00:00:00
+                    });
+
+                    displayTasks(filteredTasks);
+                }
+                else {
                     displayTasks(tasks);
                 }
             }
@@ -177,25 +184,23 @@
                 displayTasks(filteredTasks);
             });
 
-            // TODO refactor to include filter by date range
+            function setDateRange(start, end = null) {
+                dateRange.start = stripTime(start);
+                dateRange.end = end ? stripTime(end) : null;
+                filterByDateRange();
+            }
 
             $('#today-btn').on('click', function () {
-                const today = new Date().toISOString().split('T')[0];
-                const todayTasks = tasks.filter(task => task.date.split('T')[0] === today);
-                displayTasks(todayTasks);
+                const today = new Date();
+                setDateRange(today);
             });
 
-            // TODO same with today btn
             $('#week-btn').on('click', function () {
                 const today = new Date();
-                const firstDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
-                const lastDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + 6));
-
-                const weekTasks = tasks.filter(task => {
-                    const taskDate = new Date(task.date);
-                    return taskDate >= firstDayOfWeek && taskDate <= lastDayOfWeek;
-                });
-                displayTasks(weekTasks);
+                const firstDayOfWeek = stripTime(new Date(today.setDate(today.getDate() - today.getDay())));
+                const lastDayOfWeek = new Date(firstDayOfWeek);
+                lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+                setDateRange(firstDayOfWeek, lastDayOfWeek);
             });
 
             $('#sort-by').on('change', function () {
