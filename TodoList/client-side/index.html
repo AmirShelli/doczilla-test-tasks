@@ -16,7 +16,8 @@
 </head>
 
 <body>
-    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="taskModalLabel" aria-hidden="true">
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="taskModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -81,8 +82,12 @@
 
             let dateRange = { start: null, end: null };
 
+
+            function stripTime(date) {
+                return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            }
             $("#date-range-picker").datepicker({
-                dateFormat: "yyyy-mm-dd",
+                dateFormat: "yy-mm-dd", // Corrected format
                 onSelect: function (dateText) {
                     const selectedDate = new Date(dateText);
                     if (!dateRange.start || dateRange.end) {
@@ -101,12 +106,13 @@
                 }
             });
 
-            // TODO fix inclusive filtering, include one date filtering
             function filterByDateRange() {
                 if (dateRange.start && dateRange.end) {
+                    const startDate = stripTime(dateRange.start);
+                    const endDate = stripTime(dateRange.end);
                     const filteredTasks = tasks.filter(task => {
-                        const taskDate = new Date(task.date);
-                        return (taskDate >= dateRange.start) && (taskDate <= dateRange.end);
+                        const taskDate = stripTime(new Date(task.date));
+                        return (taskDate >= startDate) && (taskDate <= endDate);
                     });
 
                     displayTasks(filteredTasks);
