@@ -10,14 +10,17 @@ Task 1 concatenates file contents based on their dependency tree. The solution u
 
 ### 1. Clone the Repository
 
+Clone and access the repository:
 ```bash
 git clone https://github.com/amirshelli/doczilla-test-tasks.git
+cd ./doczilla-test-tasks
 ```
+
 ### 2. Build and Run with Makefile
 
 Navigate to application's directory and run the application using makefile:
 ```bash
-cd doczilla-test-tasks/Concatenation
+cd ./Concatenation
 make run arg=<folderName>
 ```
 Replace `<folderName>` with the name of the root folder containing the files you wish to concatenate.
@@ -38,14 +41,16 @@ Task 2 contains a simple application that allows managing student records. It co
 
 ### 1. Clone the Repository
 
+Clone and access the repository:
 ```bash
 git clone https://github.com/amirshelli/doczilla-test-tasks.git
+cd ./doczilla-test-tasks
 ```
 ### 2. Build and Run with Docker Compose
 
 Navigate to application's directory and run the application using docker-compose:
 ```bash
-cd doczilla-test-tasks/StudentCRUD
+cd ./StudentCRUD
 docker-compose up --build
 ```
 ## Usage
@@ -77,15 +82,17 @@ Task 3 implements a simple to-do list application that demonstratres the use of 
 
 ### 1. Clone the Repository
 
+Clone and access the repository:
 ```bash
 git clone https://github.com/amirshelli/doczilla-test-tasks.git
+cd ./doczilla-test-tasks
 ```
 
 ### 2. Build and Run with Docker Compose
 
 Navigate to application's directory and run the application using docker-compose:
 ```bash
-cd doczilla-test-tasks/TodoList
+cd ./TodoList
 docker-compose up --build
 ```
 
