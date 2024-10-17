@@ -122,3 +122,7 @@ body {
 .sidebar button:hover {
     background-color: #ddd;
 }
+
+#date-range-picker {
+    display: flex;
+}
