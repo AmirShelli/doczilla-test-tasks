@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  server:
+    build: ./server-side
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./server-side:/usr/src/app
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - client
+
+  client:
+    build: ./client-side
+    ports:
+      - "80:80"
+    volumes:
+      - ./client-side:/usr/share/nginx/html
